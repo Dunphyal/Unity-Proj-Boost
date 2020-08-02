@@ -6,7 +6,8 @@ using UnityEngine.UIElements;
 
 public class Rocket : MonoBehaviour
 {
-    public int Thrust;
+    [SerializeField] float mainThrust; // SerializaField used rather than public so that value can be adjusted in the inspector but no from other scripts
+    [SerializeField] float rotationalThrust;
     Rigidbody rigidbody;
     AudioSource audioSource;
 
@@ -20,30 +21,44 @@ public class Rocket : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        ProcessInput();
+        Thrust();
+        Rotate();
     }
 
-    private void ProcessInput()
+    private void OnCollisionEnter(Collision collision)
     {
-        if (Input.GetKeyUp(KeyCode.Space))
+        string output = collision.gameObject.tag == "Friendly" ? "Friendly game object" : "Hazardous game object";
+        print(output);
+    }
+
+    private void Rotate()
+    {
+        rigidbody.freezeRotation = true;
+        if (Input.GetKey(KeyCode.A))
         {
-            audioSource.Stop();
+            transform.Rotate(new Vector3(0, 0, -Time.deltaTime * rotationalThrust));
         }
+        else if (Input.GetKey(KeyCode.D))
+        {
+            transform.Rotate(new Vector3(0, 0, Time.deltaTime * rotationalThrust));
+        }
+        rigidbody.freezeRotation = false;
+
+    }
+
+    private void Thrust()
+    {
         if (Input.GetKey(KeyCode.Space))
         {
-            rigidbody.AddRelativeForce(new Vector3(0, Thrust, 0));
+            rigidbody.AddRelativeForce(new Vector3(0, mainThrust * Time.deltaTime, 0));
             if (!audioSource.isPlaying)
             {
                 audioSource.Play();
             }
         }
-        if (Input.GetKey(KeyCode.A))
+        else
         {
-            transform.Rotate(new Vector3(0, 0, 1));
-        }
-        else if (Input.GetKey(KeyCode.D))
-        {
-            transform.Rotate(new Vector3(0, 0, -1));
+            audioSource.Stop();
         }
     }
 }
